@@ -19,13 +19,31 @@
 
         /* HOT ROD PROTOCOL (Red & Gold) */
         body.theme-hotrod {
-            --primary: #ffaa00;       /* Gold text */
-            --success: #ffcc00;       /* Bright gold success */
-            --danger: #ff0000;        /* Pure red */
-            --system: #ff4400;        /* Orange/Red system msgs */
-            --bg-color: #0a0101;      /* Deep crimson black */
+            --primary: #ffaa00;       
+            --success: #ffcc00;       
+            --danger: #ff0000;        
+            --system: #ff4400;        
+            --bg-color: #0a0101;      
             --glow-primary: rgba(255, 170, 0, 0.5);
             --glow-faint: rgba(255, 170, 0, 0.1);
+        }
+
+        /* EMERGENCY PROTOCOL (Critical Red) */
+        body.theme-emergency {
+            --primary: #ff003c;       
+            --success: #ff003c;       
+            --danger: #ff003c;        
+            --system: #ff003c;        
+            --bg-color: #1a0000;      
+            --glow-primary: rgba(255, 0, 60, 0.6);
+            --glow-faint: rgba(255, 0, 60, 0.2);
+            animation: flashEmergency 1.5s infinite;
+        }
+
+        @keyframes flashEmergency {
+            0% { background-color: #050000; }
+            50% { background-color: #2a0000; }
+            100% { background-color: #050000; }
         }
 
         body { background-color: var(--bg-color); color: var(--primary); font-family: 'Share Tech Mono', monospace; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; transition: background-color 1s ease, color 1s ease; }
@@ -91,7 +109,7 @@
 
     <script>
         const bootSequence = [
-            "INITIALIZING MARK VII MAINFRAME...",
+            "INITIALIZING MARK VIII MAINFRAME...",
             "DYNAMIC ARMOR THEMES SYNCED...",
             "ACTIVATING VOCAL BIOMETRICS..."
         ];
@@ -101,6 +119,7 @@
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let recognitionMode = true; 
         let recognitionEngine = null;
+        let alarmInterval = null; // Stores the emergency alarm loop
 
         function playTone(freq, type, duration, vol=0.1) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -113,17 +132,28 @@
         }
         function playSuccess() { playTone(600, 'sine', 0.1, 0.1); setTimeout(() => playTone(800, 'sine', 0.3, 0.1), 100); }
         function playError() { playTone(150, 'sawtooth', 0.4, 0.1); }
+        
+        // Alarm System Controls
+        function startAlarm() {
+            stopAlarm();
+            let high = false;
+            alarmInterval = setInterval(() => { playTone(high ? 700 : 500, 'square', 0.4, 0.1); high = !high; }, 500);
+        }
+        function stopAlarm() {
+            if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+        }
 
-        function jarvisSpeak(text) {
+        function jarvisSpeak(text, urgent=false) {
             const speech = new SpeechSynthesisUtterance(text);
-            speech.pitch = 0.8; speech.rate = 1.1; window.speechSynthesis.speak(speech);
+            speech.pitch = urgent ? 0.6 : 0.8; 
+            speech.rate = urgent ? 1.2 : 1.1; 
+            window.speechSynthesis.speak(speech);
         }
 
         // --- BACKGROUND CANVAS (Dynamic Colors) ---
         const canvas = document.getElementById('hologram-bg'); const ctx = canvas.getContext('2d');
         let particles = []; let mouse = { x: null, y: null, radius: 150 };
         
-        // Variables to control canvas colors via JS
         let particleHex = '#00eeff';
         let lineRGB = '0, 238, 255';
 
@@ -211,23 +241,50 @@
                 return;
             }
 
+            // COMMAND: EMERGENCY PROTOCOL (Lockdown)
+            if (command.includes("emergency protocol") || command.includes("directive omega") || command.includes("initiate lockdown")) {
+                document.body.className = ''; // Wipe existing themes
+                document.body.classList.add('theme-emergency');
+                particleHex = '#ff003c'; 
+                lineRGB = '255, 0, 60'; 
+                
+                bgm.pause(); // Cut the music to make the alarm impactful
+                window.speechSynthesis.cancel(); // Interrupt JARVIS if speaking
+                startAlarm();
+                
+                jarvisSpeak("Critical alert. Directive Omega recognized. Initiating total system purge and deep space lockdown.", true);
+                
+                await typeLine("WARNING: DIRECTIVE OMEGA AUTHORIZED.", "denied");
+                await typeLine("PURGING ASTROPHYSICS KERNEL...", "denied");
+                await typeLine("WIPING NEURAL SCHEMATICS...", "denied");
+                await typeLine("MAINFRAME LOCKDOWN ENGAGED.", "denied");
+                
+                if (isVoice && recognitionMode) setTimeout(startVoiceRecognition, 1500);
+                return;
+            }
+
             // COMMAND: THEME SWAP (HOT ROD vs STEALTH)
             if (command.includes("protocol hot rod") || command.includes("activate mark 3") || command.includes("change color")) {
+                stopAlarm(); // Turn off alarm if emergency was active
+                document.body.className = ''; 
                 document.body.classList.add('theme-hotrod');
-                particleHex = '#ffaa00'; // Gold particles
-                lineRGB = '255, 170, 0'; // Gold lines
+                particleHex = '#ffaa00'; 
+                lineRGB = '255, 170, 0'; 
+                
                 jarvisSpeak("Protocol Hot Rod engaged. Adjusting armor aesthetics.");
                 await typeLine("PROTOCOL HOT ROD: ACTIVE. CALIBRATING RED AND GOLD METRICS.", "system-msg");
                 if (isVoice && recognitionMode) setTimeout(startVoiceRecognition, 1500);
                 return;
             }
 
-            if (command.includes("stealth mode") || command.includes("default theme") || command.includes("revert color")) {
-                document.body.classList.remove('theme-hotrod');
-                particleHex = '#00eeff'; // Cyan particles
-                lineRGB = '0, 238, 255'; // Cyan lines
-                jarvisSpeak("Stealth mode engaged. Returning to default cyan matrix.");
-                await typeLine("PROTOCOL STEALTH: ACTIVE. REVERTING TO CYAN METRICS.", "system-msg");
+            if (command.includes("stealth mode") || command.includes("default theme") || command.includes("revert color") || command.includes("cancel lockdown")) {
+                stopAlarm(); // Turn off alarm if emergency was active
+                document.body.className = ''; 
+                particleHex = '#00eeff'; 
+                lineRGB = '0, 238, 255'; 
+                
+                jarvisSpeak("Stealth mode engaged. Returning to standard metrics.");
+                await typeLine("PROTOCOL STEALTH: ACTIVE. SYSTEM STABILIZED.", "system-msg");
                 if (isVoice && recognitionMode) setTimeout(startVoiceRecognition, 1500);
                 return;
             }
@@ -240,11 +297,13 @@
             else if (command.includes("pause music")) { bgm.pause(); await typeLine("AUDIO: PLAYBACK PAUSED", "system-msg"); }
             else if (command.includes("play music")) { bgm.play(); await typeLine("AUDIO: PLAYBACK RESUMED", "system-msg"); }
 
-          // COMMAND: DECRYPT (The Password)
-            if (command.includes("jarvis decrypt payload") || command === "jarvis") {
+            // COMMAND: DECRYPT (The Password)
+            else if (command.includes("jarvis decrypt payload") || command === "jarvis") {
+                stopAlarm();
+                document.body.className = ''; // Revert to stealth automatically on unlock
+                particleHex = '#00eeff'; lineRGB = '0, 238, 255'; 
+
                 playSuccess(); 
-                
-                // Temporarily hide inputs while decrypting
                 micStatus.style.display = 'none'; 
                 inputLine.style.display = 'none';
                 
@@ -258,19 +317,17 @@
                     secretMessageDiv.style.display = 'block'; 
                     scrollToBottom(); 
                     
-                    // --- THE FIX: BRING THE CONTROLS BACK ONLINE ---
-                    if (isVoice) {
-                        setTimeout(startVoiceRecognition, 1000); // Restart mic
+                    if (isVoice && recognitionMode) {
+                        setTimeout(startVoiceRecognition, 1000); 
                     } else {
-                        inputLine.style.display = 'flex'; // Bring back keyboard
+                        inputLine.style.display = 'flex'; 
                         passcodeInput.disabled = false;
                         passcodeInput.focus();
                     }
                 }, 4000);
-                
                 return;
             }
-                
+
             // COMMAND: CLEAR
             else if (command === "clear") { outputDiv.innerHTML = ''; }
 
