@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.T.A.R.K. Secure Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #030a10;
+            color: #00eeff;
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at center, #031424 0%, #010408 100%);
+        }
+
+        /* Scanline overlay for that retro/secure screen effect */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #terminal {
+            width: 80%;
+            max-width: 800px;
+            padding: 40px;
+            border: 1px solid #00eeff;
+            box-shadow: 0 0 20px rgba(0, 238, 255, 0.2), inset 0 0 20px rgba(0, 238, 255, 0.1);
+            border-radius: 5px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .line {
+            margin: 10px 0;
+            text-shadow: 0 0 5px #00eeff;
+            opacity: 0;
+        }
+
+        .visible {
+            opacity: 1;
+        }
+
+        /* The Blinking Cursor */
+        .cursor::after {
+            content: "█";
+            animation: blink 1s step-start infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        #auth-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #00eeff;
+            color: #00eeff;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.2rem;
+            outline: none;
+            width: 200px;
+            text-transform: uppercase;
+            text-shadow: 0 0 5px #00eeff;
+            letter-spacing: 2px;
+        }
+
+        .granted { color: #00ffaa; text-shadow: 0 0 10px #00ffaa; }
+        .denied { color: #ff003c; text-shadow: 0 0 10px #ff003c; }
+
+        #secret-message {
+            display: none;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed rgba(0, 238, 255, 0.5);
+            font-size: 1.5rem;
+            line-height: 1.6;
+            animation: fadeIn 2s ease-in;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; filter: blur(5px); } to { opacity: 1; filter: blur(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="terminal">
+        <div id="output"></div>
+        
+        <div id="auth-section">
+            <span class="cursor">ENTER AUTHORIZATION CODE: </span>
+            <input type="password" id="passcode" autocomplete="off" autofocus>
+        </div>
+
+        <div id="secret-message">
+            CLASSIFIED DECRYPTED:<br><br>
+            "The neural chip architecture is stable. Project: Astro-nav systems are ready for deployment. See you among the stars, Yugant."
+        </div>
+    </div>
+
+    <script>
+        // --- CUSTOMIZATION SECTION ---
+        const CORRECT_PASSWORD = "JARVIS"; 
+        const bootSequence = [
+            "INITIATING MAINFRAME...",
+            "BYPASSING SECURITY PROTOCOLS...",
+            "ASTRO-NAVIGATION SYSTEMS: ONLINE",
+            "NEURAL INTERFACE: SYNCED",
+            "ESTABLISHING SECURE CONNECTION...",
+            "WARNING: UNAUTHORIZED ACCESS DETECTED."
+        ];
+        // -----------------------------
+
+        const outputDiv = document.getElementById('output');
+        const authSection = document.getElementById('auth-section');
+        const passcodeInput = document.getElementById('passcode');
+        const secretMessageDiv = document.getElementById('secret-message');
+        
+        // AI Voice Function
+        function jarvisSpeak(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.pitch = 0.8; // Lower pitch for a mechanical feel
+            speech.rate = 1.1;  // Slightly faster, precise speech
+            speech.volume = 1;  
+            window.speechSynthesis.speak(speech);
+        }
+
+        // Terminal Typing Effect
+        async function typeLine(text, delay = 50) {
+            return new Promise(resolve => {
+                const p = document.createElement('div');
+                p.className = 'line visible';
+                outputDiv.appendChild(p);
+                
+                let i = 0;
+                function typeChar() {
+                    if (i < text.length) {
+                        p.innerHTML += text.charAt(i);
+                        i++;
+                        setTimeout(typeChar, delay);
+                    } else {
+                        resolve();
+                    }
+                }
+                typeChar();
+            });
+        }
+
+        // Boot Sequence Execution
+        async function startBootSequence() {
+            for (let line of bootSequence) {
+                await typeLine(line, 30);
+                await new Promise(r => setTimeout(r, 400)); 
+            }
+            authSection.style.display = 'block';
+            passcodeInput.focus();
+        }
+
+        // Password Authentication & Voice Triggers
+        passcodeInput.addEventListener('keypress', async function(e) {
+            if (e.key === 'Enter') {
+                const attempt = passcodeInput.value.toUpperCase();
+                passcodeInput.disabled = true;
+                
+                if (attempt === CORRECT_PASSWORD) {
+                    jarvisSpeak("Authorization accepted. Neural sync complete. Welcome back, Yugant.");
+                    
+                    await typeLine("<span class='granted'>ACCESS GRANTED. DECRYPTING DATA...</span>", 50);
+                    setTimeout(() => {
+                        authSection.style.display = 'none';
+                        secretMessageDiv.style.display = 'block';
+                    }, 1000);
+                } else {
+                    jarvisSpeak("Warning. Unauthorized access detected.");
+                    
+                    await typeLine("<span class='denied'>ACCESS DENIED. SECURITY ALERT LOGGED.</span>", 30);
+                    setTimeout(() => {
+                        passcodeInput.value = '';
+                        passcodeInput.disabled = false;
+                        passcodeInput.focus();
+                    }, 1500);
+                }
+            }
+        });
+
+        // Initialize on Load
+        window.onload = startBootSequence;
+    </script>
+</body>
+</html>
