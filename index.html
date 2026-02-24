@@ -3,48 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.T.A.R.K. Secure Terminal - Mark V</title>
+    <title>S.T.A.R.K. Terminal - Mark VII</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #010408; color: #00eeff; font-family: 'Share Tech Mono', monospace;
-            margin: 0; padding: 0; display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden; transition: background-color 0.5s ease;
+        /* CSS VARIABLES - The engine for our color themes */
+        :root {
+            --primary: #00eeff;
+            --success: #00ffaa;
+            --danger: #ff003c;
+            --system: #ffbb00;
+            --bg-color: #010408;
+            --glow-primary: rgba(0, 238, 255, 0.5);
+            --glow-faint: rgba(0, 238, 255, 0.1);
         }
 
-        /* Scanline Overlay */
-        body::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 20;
+        /* HOT ROD PROTOCOL (Red & Gold) */
+        body.theme-hotrod {
+            --primary: #ffaa00;       /* Gold text */
+            --success: #ffcc00;       /* Bright gold success */
+            --danger: #ff0000;        /* Pure red */
+            --system: #ff4400;        /* Orange/Red system msgs */
+            --bg-color: #0a0101;      /* Deep crimson black */
+            --glow-primary: rgba(255, 170, 0, 0.5);
+            --glow-faint: rgba(255, 170, 0, 0.1);
         }
 
+        body { background-color: var(--bg-color); color: var(--primary); font-family: 'Share Tech Mono', monospace; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; transition: background-color 1s ease, color 1s ease; }
+        body::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 20; }
+        
         #hologram-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.6; }
 
-        /* Start Screen */
-        #start-screen {
-            position: absolute; z-index: 50; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            background: rgba(1, 4, 8, 0.9); backdrop-filter: blur(10px);
-            cursor: pointer;
-        }
-        #start-btn {
-            font-size: 1.5rem; color: #00eeff; border: 1px solid #00eeff;
-            padding: 20px 40px; text-transform: uppercase; letter-spacing: 3px;
-            box-shadow: 0 0 15px rgba(0, 238, 255, 0.2), inset 0 0 10px rgba(0, 238, 255, 0.1);
-            animation: pulse 2s infinite; pointer-events: none;
-        }
-        @keyframes pulse { 50% { box-shadow: 0 0 30px #00eeff, inset 0 0 20px #00eeff; text-shadow: 0 0 10px #00eeff; } }
+        #start-screen { position: absolute; z-index: 50; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(1, 4, 8, 0.9); backdrop-filter: blur(10px); cursor: pointer; }
+        #start-btn { font-size: 1.5rem; color: var(--primary); border: 1px solid var(--primary); padding: 20px 40px; text-transform: uppercase; letter-spacing: 3px; box-shadow: 0 0 15px var(--glow-faint), inset 0 0 10px var(--glow-faint); animation: pulse 2s infinite; pointer-events: none; transition: all 1s ease; }
+        @keyframes pulse { 50% { box-shadow: 0 0 30px var(--primary), inset 0 0 20px var(--primary); text-shadow: 0 0 10px var(--primary); } }
 
-        /* Main Terminal */
-        #terminal-container {
-            width: 80%; max-width: 800px; height: 65vh; max-height: 600px;
-            background: rgba(3, 10, 16, 0.85); border: 1px solid rgba(0, 238, 255, 0.5);
-            box-shadow: 0 0 30px rgba(0, 238, 255, 0.1), inset 0 0 20px rgba(0, 238, 255, 0.1);
-            border-radius: 8px; backdrop-filter: blur(4px); position: relative; z-index: 10;
-            display: none; flex-direction: column; padding: 30px;
-        }
-
+        #terminal-container { width: 80%; max-width: 800px; height: 70vh; max-height: 600px; background: rgba(3, 10, 16, 0.85); border: 1px solid var(--glow-primary); box-shadow: 0 0 30px var(--glow-faint), inset 0 0 20px var(--glow-faint); border-radius: 8px; backdrop-filter: blur(4px); position: relative; z-index: 10; display: none; flex-direction: column; padding: 30px; transition: all 1s ease; }
         #terminal-scroll { flex-grow: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
         #terminal-scroll::-webkit-scrollbar { display: none; }
 
@@ -53,45 +46,26 @@
         .cursor::after { content: "█"; animation: blink 1s step-start infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        .granted { color: #00ffaa; } .denied { color: #ff003c; } 
-        .voice-prompt { color: #ffbb00; font-weight: bold; text-shadow: 0 0 10px #ffbb00; }
-        .user-voice { color: #fff; font-style: italic; }
+        #input-line { display: none; margin-top: 15px; align-items: center; }
+        .prompt { margin-right: 10px; color: var(--primary); }
+        input { background: transparent; border: none; color: var(--primary); font-family: 'Share Tech Mono', monospace; font-size: 1.2rem; outline: none; width: 70%; text-transform: uppercase; text-shadow: 0 0 5px var(--primary); letter-spacing: 1px; transition: color 1s ease; }
 
-        /* Arc Reactor */
-        #arc-reactor {
-            display: none; width: 60px; height: 60px; margin: 30px auto;
-            border: 4px solid transparent; border-top: 4px solid #00eeff; border-bottom: 4px solid #00eeff;
-            border-radius: 50%; animation: spin 1s linear infinite, glow 2s ease-in-out infinite;
-        }
-        #arc-reactor::before {
-            content: ""; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px;
-            border: 2px solid transparent; border-left: 2px solid #00ffaa; border-right: 2px solid #00ffaa;
-            border-radius: 50%; animation: spin-reverse 0.5s linear infinite;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } } 
-        @keyframes spin-reverse { 100% { transform: rotate(-360deg); } } 
-        @keyframes glow { 50% { box-shadow: 0 0 20px #00eeff, inset 0 0 15px #00eeff; } }
+        .granted { color: var(--success); } .denied { color: var(--danger); } .system-msg { color: var(--system); } .user-voice { color: #fff; font-style: italic; } .user-text { color: #fff; }
 
-        #secret-message {
-            display: none; margin-top: 20px; padding: 20px;
-            background: rgba(0, 238, 255, 0.05); border-left: 4px solid #00ffaa;
-            font-size: 1.2rem; line-height: 1.6; animation: fadeIn 1.5s ease-in;
-        }
+        #arc-reactor { display: none; width: 60px; height: 60px; margin: 30px auto; border: 4px solid transparent; border-top: 4px solid var(--primary); border-bottom: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite, glow 2s ease-in-out infinite; transition: all 1s ease; }
+        #arc-reactor::before { content: ""; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px; border: 2px solid transparent; border-left: 2px solid var(--success); border-right: 2px solid var(--success); border-radius: 50%; animation: spin-reverse 0.5s linear infinite; transition: all 1s ease; }
+        @keyframes spin { 100% { transform: rotate(360deg); } } @keyframes spin-reverse { 100% { transform: rotate(-360deg); } } @keyframes glow { 50% { box-shadow: 0 0 20px var(--primary), inset 0 0 15px var(--primary); } }
+
+        #secret-message { display: none; margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-left: 4px solid var(--success); font-size: 1.2rem; line-height: 1.6; animation: fadeIn 1.5s ease-in; transition: border-color 1s ease; }
         @keyframes fadeIn { from { opacity: 0; filter: blur(10px); transform: translateY(10px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
         
-        /* Mic Indicator */
-        #mic-status {
-            display: none; margin-top: 15px; text-align: center; color: #ffbb00;
-            animation: pulse-mic 1.5s infinite;
-        }
+        #mic-status { display: none; margin-top: 15px; text-align: center; color: var(--system); animation: pulse-mic 1.5s infinite; transition: color 1s ease; }
         @keyframes pulse-mic { 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-    <audio id="bgm" loop>
-        <source src="marvel.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="bgm" loop><source src="marvel.mp3" type="audio/mpeg"></audio>
 
     <div id="start-screen" onclick="initSystem()">
         <div id="start-btn">TAP TO INITIALIZE MAINFRAME</div>
@@ -102,33 +76,32 @@
     <div id="terminal-container">
         <div id="terminal-scroll">
             <div id="output"></div>
-            
             <div id="mic-status">[ MICROPHONE ACTIVE - AWAITING VOICE DIRECTIVE ]</div>
-            
             <div id="arc-reactor"></div>
-
             <div id="secret-message">
-                <span style="color: #00ffaa; font-size: 0.9em;">[DECRYPTION COMPLETE]</span><br><br>
+                <span style="color: var(--success); font-size: 0.9em;">[DECRYPTION COMPLETE]</span><br><br>
                 "Astro-navigation arrays calibrated. Neural link efficiency at 99.8%. The orbital trajectory is locked. See you among the stars, Yugant."
             </div>
+        </div>
+        <div id="input-line">
+            <span class="prompt cursor">C:\MAINFRAME> </span>
+            <input type="text" id="passcode" autocomplete="off" spellcheck="false">
         </div>
     </div>
 
     <script>
         const bootSequence = [
-            "INITIALIZING MARK V MAINFRAME...",
-            "ESTABLISHING SECURE KERNEL...",
-            "BYPASSING PHYSICAL KEYBOARD INPUT...",
+            "INITIALIZING MARK VII MAINFRAME...",
+            "DYNAMIC ARMOR THEMES SYNCED...",
             "ACTIVATING VOCAL BIOMETRICS..."
         ];
 
         // --- AUDIO SYSTEM ---
         const bgm = document.getElementById('bgm');
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        function playSuccess() { playTone(600, 'sine', 0.1, 0.1); setTimeout(() => playTone(800, 'sine', 0.3, 0.1), 100); }
-        function playError() { playTone(150, 'sawtooth', 0.4, 0.1); }
-        
+        let recognitionMode = true; 
+        let recognitionEngine = null;
+
         function playTone(freq, type, duration, vol=0.1) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
@@ -138,84 +111,65 @@
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
+        function playSuccess() { playTone(600, 'sine', 0.1, 0.1); setTimeout(() => playTone(800, 'sine', 0.3, 0.1), 100); }
+        function playError() { playTone(150, 'sawtooth', 0.4, 0.1); }
 
         function jarvisSpeak(text) {
             const speech = new SpeechSynthesisUtterance(text);
             speech.pitch = 0.8; speech.rate = 1.1; window.speechSynthesis.speak(speech);
         }
 
-        // --- BACKGROUND NEURAL NETWORK ---
+        // --- BACKGROUND CANVAS (Dynamic Colors) ---
         const canvas = document.getElementById('hologram-bg'); const ctx = canvas.getContext('2d');
         let particles = []; let mouse = { x: null, y: null, radius: 150 };
+        
+        // Variables to control canvas colors via JS
+        let particleHex = '#00eeff';
+        let lineRGB = '0, 238, 255';
 
         window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
         window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 1; this.vy = (Math.random() - 0.5) * 1;
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-                if (mouse.x != null) {
-                    let dx = mouse.x - this.x; let dy = mouse.y - this.y; let dist = Math.sqrt(dx*dx + dy*dy);
-                    if (dist < mouse.radius) {
-                        const force = (mouse.radius - dist) / mouse.radius;
-                        this.x -= (dx/dist) * force * 3; this.y -= (dy/dist) * force * 3;
-                    }
-                }
-            }
-            draw() {
-                ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2); ctx.fillStyle = '#00eeff'; ctx.fill();
-            }
+        
+        class Particle { 
+            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.vx = (Math.random() - 0.5); this.vy = (Math.random() - 0.5); } 
+            update() { 
+                this.x += this.vx; this.y += this.vy; 
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1; 
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1; 
+                if (mouse.x != null) { let dx = mouse.x - this.x; let dy = mouse.y - this.y; let dist = Math.sqrt(dx*dx + dy*dy); if (dist < mouse.radius) { const force = (mouse.radius - dist) / mouse.radius; this.x -= (dx/dist) * force * 3; this.y -= (dy/dist) * force * 3; } } 
+            } 
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2); ctx.fillStyle = particleHex; ctx.fill(); } 
         }
-
         for (let i = 0; i < 100; i++) particles.push(new Particle());
-
-        function animateCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update(); particles[i].draw();
-                if (mouse.x != null) {
-                    let dx = mouse.x - particles[i].x; let dy = mouse.y - particles[i].y; let dist = Math.sqrt(dx*dx + dy*dy);
-                    if (dist < 150) {
-                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(mouse.x, mouse.y);
-                        ctx.strokeStyle = `rgba(0, 238, 255, ${0.8 - dist/150})`; ctx.stroke();
-                    }
-                }
-                for (let j = i; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x; const dy = particles[i].y - particles[j].y; const dist = Math.sqrt(dx*dx + dy*dy);
-                    if (dist < 100) {
-                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(0, 238, 255, ${1 - dist/100})`; ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(animateCanvas);
+        
+        function animateCanvas() { 
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
+            for (let i = 0; i < particles.length; i++) { 
+                particles[i].update(); particles[i].draw(); 
+                if (mouse.x != null) { let dx = mouse.x - particles[i].x; let dy = mouse.y - particles[i].y; let dist = Math.sqrt(dx*dx + dy*dy); if (dist < 150) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(mouse.x, mouse.y); ctx.strokeStyle = `rgba(${lineRGB}, ${0.8 - dist/150})`; ctx.stroke(); } } 
+                for (let j = i; j < particles.length; j++) { const dx = particles[i].x - particles[j].x; const dy = particles[i].y - particles[j].y; const dist = Math.sqrt(dx*dx + dy*dy); if (dist < 100) { ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(${lineRGB}, ${1 - dist/100})`; ctx.stroke(); } } 
+            } requestAnimationFrame(animateCanvas); 
         }
         animateCanvas();
 
         // --- TERMINAL LOGIC ---
         const outputDiv = document.getElementById('output'); const terminalScroll = document.getElementById('terminal-scroll');
         const arcReactor = document.getElementById('arc-reactor'); const secretMessageDiv = document.getElementById('secret-message');
-        const micStatus = document.getElementById('mic-status');
+        const micStatus = document.getElementById('mic-status'); const inputLine = document.getElementById('input-line');
+        const passcodeInput = document.getElementById('passcode');
 
         function scrollToBottom() { terminalScroll.scrollTop = terminalScroll.scrollHeight; }
 
-        async function typeLine(text, customClass = '', delay = 20) {
+        async function typeLine(text, customClass = '', delay = 15) {
             return new Promise(resolve => {
                 const p = document.createElement('div'); p.className = `line visible ${customClass}`;
                 outputDiv.appendChild(p); scrollToBottom();
                 let i = 0;
                 function typeChar() {
-                    if (i < text.length) {
-                        p.textContent += text.charAt(i); i++; setTimeout(typeChar, delay);
-                    } else { resolve(); }
+                    if (i < text.length) { p.textContent += text.charAt(i); i++; setTimeout(typeChar, delay); } 
+                    else { resolve(); }
                 }
                 typeChar();
             });
@@ -224,75 +178,122 @@
         function initSystem() {
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('terminal-container').style.display = 'flex';
-            
-            // Start BGM
-            bgm.volume = 0.4; // Keep music slightly lower than Voice
-            bgm.play().catch(e => console.log("No marvel.mp3 found, skipping audio."));
-            
+            bgm.volume = 0.15; 
+            bgm.play().catch(e => console.log("No audio file found."));
             startBootSequence();
         }
 
         async function startBootSequence() {
-            for (let line of bootSequence) {
-                await typeLine(line, '', 15); await new Promise(r => setTimeout(r, 400)); 
-            }
-            await typeLine("PLEASE STATE YOUR DIRECTIVE:", "voice-prompt", 30);
-            jarvisSpeak("Systems online. Awaiting vocal authorization. Please state your directive.");
-            
-            setTimeout(startVoiceRecognition, 3500); // Wait for JARVIS to finish speaking
+            for (let line of bootSequence) { await typeLine(line, '', 15); await new Promise(r => setTimeout(r, 300)); }
+            await typeLine("PLEASE STATE YOUR DIRECTIVE:", "system-msg", 30);
+            jarvisSpeak("Systems online. Microphone is active.");
+            setTimeout(startVoiceRecognition, 2000);
         }
 
-        // --- VOICE RECOGNITION (Web Speech API) ---
-        function startVoiceRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                typeLine("ERROR: VOCAL SENSORS UNAVAILABLE IN THIS BROWSER.", "denied");
+        // --- MASTER COMMAND PARSER ---
+        async function processCommand(cmd, isVoice) {
+            if (!cmd) return;
+            
+            if (isVoice) await typeLine(`> VOICE: "${cmd}"`, 'user-voice');
+            else await typeLine(`C:\\MAINFRAME> ${cmd.toUpperCase()}`, 'user-text');
+
+            const command = cmd.toLowerCase();
+
+            // COMMAND: ENABLE KEYBOARD / MANUAL OVERRIDE
+            if (command.includes("manual override") || command.includes("activate keyboard") || command.includes("enable keyboard")) {
+                if (isVoice) {
+                    recognitionMode = false; micStatus.style.display = 'none';
+                    if (recognitionEngine) recognitionEngine.stop();
+                    jarvisSpeak("Disengaging vocal biometrics. Transferring control to manual keyboard.");
+                    await typeLine("VOCAL SENSORS OFFLINE. KEYBOARD INPUT ENABLED.", "system-msg");
+                    inputLine.style.display = 'flex'; passcodeInput.focus();
+                } else { await typeLine("MANUAL OVERRIDE ALREADY ACTIVE.", "system-msg"); }
                 return;
             }
 
-            const recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
+            // COMMAND: THEME SWAP (HOT ROD vs STEALTH)
+            if (command.includes("protocol hot rod") || command.includes("activate mark 3") || command.includes("change color")) {
+                document.body.classList.add('theme-hotrod');
+                particleHex = '#ffaa00'; // Gold particles
+                lineRGB = '255, 170, 0'; // Gold lines
+                jarvisSpeak("Protocol Hot Rod engaged. Adjusting armor aesthetics.");
+                await typeLine("PROTOCOL HOT ROD: ACTIVE. CALIBRATING RED AND GOLD METRICS.", "system-msg");
+                if (isVoice && recognitionMode) setTimeout(startVoiceRecognition, 1500);
+                return;
+            }
 
-            recognition.onstart = function() { micStatus.style.display = 'block'; scrollToBottom(); };
-            
-            recognition.onspeechend = function() { micStatus.style.display = 'none'; recognition.stop(); };
+            if (command.includes("stealth mode") || command.includes("default theme") || command.includes("revert color")) {
+                document.body.classList.remove('theme-hotrod');
+                particleHex = '#00eeff'; // Cyan particles
+                lineRGB = '0, 238, 255'; // Cyan lines
+                jarvisSpeak("Stealth mode engaged. Returning to default cyan matrix.");
+                await typeLine("PROTOCOL STEALTH: ACTIVE. REVERTING TO CYAN METRICS.", "system-msg");
+                if (isVoice && recognitionMode) setTimeout(startVoiceRecognition, 1500);
+                return;
+            }
 
-            recognition.onresult = async function(event) {
-                const transcript = event.results[0][0].transcript.toLowerCase();
-                await typeLine(`> AUDIO CAPTURED: "${transcript}"`, 'user-voice');
+            // COMMAND: AUDIO CONTROLS
+            if (command.includes("mute")) { bgm.volume = 0; await typeLine("AUDIO: MUTED", "system-msg"); }
+            else if (command.includes("unmute")) { bgm.volume = 0.15; await typeLine("AUDIO: UNMUTED", "system-msg"); }
+            else if (command.includes("volume up") || command.includes("louder")) { bgm.volume = Math.min(1.0, bgm.volume + 0.2); await typeLine("AUDIO: VOLUME INCREASED", "system-msg"); }
+            else if (command.includes("volume down") || command.includes("quieter")) { bgm.volume = Math.max(0.0, bgm.volume - 0.2); await typeLine("AUDIO: VOLUME DECREASED", "system-msg"); }
+            else if (command.includes("pause music")) { bgm.pause(); await typeLine("AUDIO: PLAYBACK PAUSED", "system-msg"); }
+            else if (command.includes("play music")) { bgm.play(); await typeLine("AUDIO: PLAYBACK RESUMED", "system-msg"); }
 
-                // Check if they said the secret phrase (Flexible matching)
-                if (transcript.includes("jarvis") && transcript.includes("decrypt") || transcript.includes("jarvis decrypt payload")) {
-                    playSuccess();
-                    jarvisSpeak("Voiceprint verified. Calibrating orbital telemetry. Welcome back, Yugant.");
-                    await typeLine("VOCAL MATCH: 100%. INITIATING DECRYPTION MATRIX...", "granted", 30);
-                    
-                    arcReactor.style.display = 'block'; scrollToBottom();
-                    setTimeout(() => {
-                        arcReactor.style.display = 'none'; secretMessageDiv.style.display = 'block'; scrollToBottom();
-                    }, 4000);
-                } else {
-                    playError();
-                    jarvisSpeak("Voiceprint mismatch. Access denied.");
-                    await typeLine("ACCESS DENIED. PLEASE RE-STATE DIRECTIVE.", "denied", 20);
-                    setTimeout(startVoiceRecognition, 3000); // Restart mic after failure
-                }
-            };
+            // COMMAND: DECRYPT (The Password)
+            else if (command.includes("jarvis decrypt payload") || command === "jarvis") {
+                playSuccess(); recognitionMode = false; micStatus.style.display = 'none'; inputLine.style.display = 'none';
+                jarvisSpeak("Command accepted. Calibrating orbital telemetry. Welcome back.");
+                await typeLine("ACCESS GRANTED. INITIATING DECRYPTION MATRIX...", "granted", 30);
+                arcReactor.style.display = 'block'; scrollToBottom();
+                setTimeout(() => { arcReactor.style.display = 'none'; secretMessageDiv.style.display = 'block'; scrollToBottom(); }, 4000);
+                return;
+            }
 
-            recognition.onerror = function(event) {
-                micStatus.style.display = 'none';
-                if(event.error === 'not-allowed') {
-                    typeLine("ERROR: MICROPHONE ACCESS BLOCKED.", "denied");
-                } else {
-                    typeLine("AUDIO SENSOR MALFUNCTION. RETRYING...", "denied");
-                    setTimeout(startVoiceRecognition, 2000);
-                }
-            };
+            // COMMAND: CLEAR
+            else if (command === "clear") { outputDiv.innerHTML = ''; }
 
-            recognition.start();
+            // DEFAULT: UNRECOGNIZED
+            else {
+                playError();
+                await typeLine(`DIRECTIVE NOT RECOGNIZED: '${cmd}'`, 'denied');
+            }
+
+            if (isVoice && recognitionMode && !command.includes("decrypt")) setTimeout(startVoiceRecognition, 1000);
         }
+
+        // --- VOICE INPUT HANDLER ---
+        function startVoiceRecognition() {
+            if (!recognitionMode) return; 
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { typeLine("ERROR: VOCAL SENSORS UNAVAILABLE. TYPE 'MANUAL OVERRIDE' TO BYPASS.", "denied"); return; }
+
+            recognitionEngine = new SpeechRecognition();
+            recognitionEngine.continuous = false; recognitionEngine.lang = 'en-US';
+
+            recognitionEngine.onstart = function() { micStatus.style.display = 'block'; scrollToBottom(); };
+            recognitionEngine.onspeechend = function() { micStatus.style.display = 'none'; recognitionEngine.stop(); };
+            recognitionEngine.onresult = function(event) { processCommand(event.results[0][0].transcript, true); };
+            recognitionEngine.onerror = function(event) {
+                micStatus.style.display = 'none';
+                if(event.error === 'not-allowed') typeLine("ERROR: MICROPHONE BLOCKED.", "denied");
+                else if (recognitionMode) setTimeout(startVoiceRecognition, 2000);
+            };
+            recognitionEngine.start();
+        }
+
+        // --- KEYBOARD INPUT HANDLER ---
+        passcodeInput.addEventListener('keydown', async function(e) {
+            if (e.key === 'Enter') {
+                const command = passcodeInput.value.trim();
+                passcodeInput.value = ''; 
+                if (command !== "") {
+                    passcodeInput.disabled = true;
+                    await processCommand(command, false);
+                    passcodeInput.disabled = false; passcodeInput.focus();
+                }
+            }
+        });
     </script>
 </body>
 </html>
