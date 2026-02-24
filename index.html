@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.T.A.R.K. Secure Terminal - Mark IV</title>
+    <title>S.T.A.R.K. Secure Terminal - Mark V</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         body {
@@ -12,29 +12,37 @@
             height: 100vh; overflow: hidden; transition: background-color 0.5s ease;
         }
 
-        body.emergency-mode { animation: flashRed 1.5s infinite; }
-        @keyframes flashRed { 0% { background-color: #010408; } 50% { background-color: #3a0000; } 100% { background-color: #010408; } }
-
-        #hologram-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.6; }
-
+        /* Scanline Overlay */
         body::after {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 2px, 3px 100%; pointer-events: none; z-index: 20;
         }
 
+        #hologram-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.6; }
+
+        /* Start Screen */
+        #start-screen {
+            position: absolute; z-index: 50; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: rgba(1, 4, 8, 0.9); backdrop-filter: blur(10px);
+            cursor: pointer;
+        }
+        #start-btn {
+            font-size: 1.5rem; color: #00eeff; border: 1px solid #00eeff;
+            padding: 20px 40px; text-transform: uppercase; letter-spacing: 3px;
+            box-shadow: 0 0 15px rgba(0, 238, 255, 0.2), inset 0 0 10px rgba(0, 238, 255, 0.1);
+            animation: pulse 2s infinite; pointer-events: none;
+        }
+        @keyframes pulse { 50% { box-shadow: 0 0 30px #00eeff, inset 0 0 20px #00eeff; text-shadow: 0 0 10px #00eeff; } }
+
+        /* Main Terminal */
         #terminal-container {
-            width: 80%; max-width: 800px; height: 60vh; max-height: 600px;
+            width: 80%; max-width: 800px; height: 65vh; max-height: 600px;
             background: rgba(3, 10, 16, 0.85); border: 1px solid rgba(0, 238, 255, 0.5);
             box-shadow: 0 0 30px rgba(0, 238, 255, 0.1), inset 0 0 20px rgba(0, 238, 255, 0.1);
             border-radius: 8px; backdrop-filter: blur(4px); position: relative; z-index: 10;
-            display: flex; flex-direction: column; padding: 30px;
-            transition: border-color 0.5s, box-shadow 0.5s;
-        }
-
-        body.emergency-mode #terminal-container {
-            border: 1px solid rgba(255, 0, 60, 0.8);
-            box-shadow: 0 0 30px rgba(255, 0, 60, 0.3), inset 0 0 20px rgba(255, 0, 60, 0.2);
+            display: none; flex-direction: column; padding: 30px;
         }
 
         #terminal-scroll { flex-grow: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
@@ -42,34 +50,27 @@
 
         .line { margin: 8px 0; text-shadow: 0 0 5px currentColor; opacity: 0; word-wrap: break-word; }
         .visible { opacity: 1; }
-        
-        #input-line { display: none; margin-top: 15px; align-items: center; }
-        .prompt { margin-right: 10px; }
         .cursor::after { content: "█"; animation: blink 1s step-start infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        input {
-            background: transparent; border: none; color: #00eeff;
-            font-family: 'Share Tech Mono', monospace; font-size: 1.2rem;
-            outline: none; width: 70%; text-transform: uppercase;
-            text-shadow: 0 0 5px #00eeff; letter-spacing: 1px;
-        }
+        .granted { color: #00ffaa; } .denied { color: #ff003c; } 
+        .voice-prompt { color: #ffbb00; font-weight: bold; text-shadow: 0 0 10px #ffbb00; }
+        .user-voice { color: #fff; font-style: italic; }
 
-        .granted { color: #00ffaa; } .denied { color: #ff003c; } .critical { color: #ff003c; font-weight: bold; font-size: 1.2rem; } .user-input { color: #fff; }
-
+        /* Arc Reactor */
         #arc-reactor {
             display: none; width: 60px; height: 60px; margin: 30px auto;
             border: 4px solid transparent; border-top: 4px solid #00eeff; border-bottom: 4px solid #00eeff;
             border-radius: 50%; animation: spin 1s linear infinite, glow 2s ease-in-out infinite;
         }
-        
         #arc-reactor::before {
             content: ""; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px;
             border: 2px solid transparent; border-left: 2px solid #00ffaa; border-right: 2px solid #00ffaa;
             border-radius: 50%; animation: spin-reverse 0.5s linear infinite;
         }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } } @keyframes spin-reverse { 100% { transform: rotate(-360deg); } } @keyframes glow { 50% { box-shadow: 0 0 20px #00eeff, inset 0 0 15px #00eeff; } }
+        @keyframes spin { 100% { transform: rotate(360deg); } } 
+        @keyframes spin-reverse { 100% { transform: rotate(-360deg); } } 
+        @keyframes glow { 50% { box-shadow: 0 0 20px #00eeff, inset 0 0 15px #00eeff; } }
 
         #secret-message {
             display: none; margin-top: 20px; padding: 20px;
@@ -77,15 +78,32 @@
             font-size: 1.2rem; line-height: 1.6; animation: fadeIn 1.5s ease-in;
         }
         @keyframes fadeIn { from { opacity: 0; filter: blur(10px); transform: translateY(10px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
+        
+        /* Mic Indicator */
+        #mic-status {
+            display: none; margin-top: 15px; text-align: center; color: #ffbb00;
+            animation: pulse-mic 1.5s infinite;
+        }
+        @keyframes pulse-mic { 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
+
+    <audio id="bgm" loop>
+        <source src="marvel.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="start-screen" onclick="initSystem()">
+        <div id="start-btn">TAP TO INITIALIZE MAINFRAME</div>
+    </div>
 
     <canvas id="hologram-bg"></canvas>
 
     <div id="terminal-container">
         <div id="terminal-scroll">
             <div id="output"></div>
+            
+            <div id="mic-status">[ MICROPHONE ACTIVE - AWAITING VOICE DIRECTIVE ]</div>
             
             <div id="arc-reactor"></div>
 
@@ -94,32 +112,22 @@
                 "Astro-navigation arrays calibrated. Neural link efficiency at 99.8%. The orbital trajectory is locked. See you among the stars, Yugant."
             </div>
         </div>
-
-        <div id="input-line">
-            <span class="prompt cursor">C:\MAINFRAME> </span>
-            <input type="text" id="passcode" autocomplete="off" spellcheck="false" autofocus>
-        </div>
     </div>
 
     <script>
-        const CORRECT_PASSWORD = "JARVIS"; 
         const bootSequence = [
-            "INITIALIZING MARK IV MAINFRAME...",
+            "INITIALIZING MARK V MAINFRAME...",
             "ESTABLISHING SECURE KERNEL...",
-            "AWAITING USER DIRECTIVE."
-        ];
-        
-        const emergencySequence = [
-            "DIRECTIVE OMEGA RECOGNIZED.",
-            "WARNING: INITIATING TOTAL SYSTEM PURGE.",
-            "WIPING NEURAL CHIP SCHEMATICS...",
-            "SECURING DEEP SPACE TELEMETRY...",
-            "MAINFRAME LOCKDOWN INITIATED."
+            "BYPASSING PHYSICAL KEYBOARD INPUT...",
+            "ACTIVATING VOCAL BIOMETRICS..."
         ];
 
         // --- AUDIO SYSTEM ---
+        const bgm = document.getElementById('bgm');
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let emergencyMode = false; let abortBoot = false;
+        
+        function playSuccess() { playTone(600, 'sine', 0.1, 0.1); setTimeout(() => playTone(800, 'sine', 0.3, 0.1), 100); }
+        function playError() { playTone(150, 'sawtooth', 0.4, 0.1); }
         
         function playTone(freq, type, duration, vol=0.1) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -131,23 +139,17 @@
             osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
 
-        function playKeystroke() { playTone(Math.random() * 200 + 800, 'square', 0.05, 0.01); }
-        function playSuccess() { playTone(600, 'sine', 0.1, 0.1); setTimeout(() => playTone(800, 'sine', 0.3, 0.1), 100); }
-        function playError() { playTone(150, 'sawtooth', 0.4, 0.1); }
-        function triggerAlarm() { let high = false; setInterval(() => { playTone(high ? 700 : 500, 'square', 0.4, 0.1); high = !high; }, 500); }
-
-        function jarvisSpeak(text, urgent = false) {
+        function jarvisSpeak(text) {
             const speech = new SpeechSynthesisUtterance(text);
-            speech.pitch = urgent ? 0.5 : 0.8; speech.rate = urgent ? 1.3 : 1.1; window.speechSynthesis.speak(speech);
+            speech.pitch = 0.8; speech.rate = 1.1; window.speechSynthesis.speak(speech);
         }
 
-        // --- INTERACTIVE NEURAL NETWORK (Mark IV Upgrade) ---
+        // --- BACKGROUND NEURAL NETWORK ---
         const canvas = document.getElementById('hologram-bg'); const ctx = canvas.getContext('2d');
         let particles = []; let mouse = { x: null, y: null, radius: 150 };
 
         window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
         window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
-
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
@@ -155,26 +157,21 @@
             constructor() {
                 this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
                 this.vx = (Math.random() - 0.5) * 1; this.vy = (Math.random() - 0.5) * 1;
-                this.baseX = this.x; this.baseY = this.y;
             }
             update() {
                 this.x += this.vx; this.y += this.vy;
                 if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
                 if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-
-                // Mouse interaction physics
                 if (mouse.x != null) {
-                    let dx = mouse.x - this.x; let dy = mouse.y - this.y; let distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < mouse.radius) {
-                        const forceDirectionX = dx / distance; const forceDirectionY = dy / distance;
-                        const force = (mouse.radius - distance) / mouse.radius;
-                        this.x -= forceDirectionX * force * 3; this.y -= forceDirectionY * force * 3;
+                    let dx = mouse.x - this.x; let dy = mouse.y - this.y; let dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < mouse.radius) {
+                        const force = (mouse.radius - dist) / mouse.radius;
+                        this.x -= (dx/dist) * force * 3; this.y -= (dy/dist) * force * 3;
                     }
                 }
             }
             draw() {
-                ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-                ctx.fillStyle = emergencyMode ? '#ff003c' : '#00eeff'; ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2); ctx.fillStyle = '#00eeff'; ctx.fill();
             }
         }
 
@@ -184,21 +181,18 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update(); particles[i].draw();
-                
-                // Connect to mouse
                 if (mouse.x != null) {
                     let dx = mouse.x - particles[i].x; let dy = mouse.y - particles[i].y; let dist = Math.sqrt(dx*dx + dy*dy);
                     if (dist < 150) {
                         ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(mouse.x, mouse.y);
-                        ctx.strokeStyle = emergencyMode ? `rgba(255, 0, 60, ${0.8 - dist/150})` : `rgba(0, 238, 255, ${0.8 - dist/150})`; ctx.stroke();
+                        ctx.strokeStyle = `rgba(0, 238, 255, ${0.8 - dist/150})`; ctx.stroke();
                     }
                 }
-
                 for (let j = i; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x; const dy = particles[i].y - particles[j].y; const dist = Math.sqrt(dx * dx + dy * dy);
+                    const dx = particles[i].x - particles[j].x; const dy = particles[i].y - particles[j].y; const dist = Math.sqrt(dx*dx + dy*dy);
                     if (dist < 100) {
                         ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = emergencyMode ? `rgba(255, 0, 60, ${1 - dist/100})` : `rgba(0, 238, 255, ${1 - dist/100})`; ctx.stroke();
+                        ctx.strokeStyle = `rgba(0, 238, 255, ${1 - dist/100})`; ctx.stroke();
                     }
                 }
             }
@@ -207,106 +201,98 @@
         animateCanvas();
 
         // --- TERMINAL LOGIC ---
-        const outputDiv = document.getElementById('output'); const inputLine = document.getElementById('input-line');
-        const passcodeInput = document.getElementById('passcode'); const terminalScroll = document.getElementById('terminal-scroll');
+        const outputDiv = document.getElementById('output'); const terminalScroll = document.getElementById('terminal-scroll');
         const arcReactor = document.getElementById('arc-reactor'); const secretMessageDiv = document.getElementById('secret-message');
+        const micStatus = document.getElementById('mic-status');
 
         function scrollToBottom() { terminalScroll.scrollTop = terminalScroll.scrollHeight; }
 
         async function typeLine(text, customClass = '', delay = 20) {
             return new Promise(resolve => {
-                if (abortBoot && !customClass.includes("critical")) return resolve();
                 const p = document.createElement('div'); p.className = `line visible ${customClass}`;
                 outputDiv.appendChild(p); scrollToBottom();
                 let i = 0;
                 function typeChar() {
                     if (i < text.length) {
-                        p.textContent += text.charAt(i);
-                        if(text.charAt(i) !== ' ') playKeystroke();
-                        i++; setTimeout(typeChar, delay);
+                        p.textContent += text.charAt(i); i++; setTimeout(typeChar, delay);
                     } else { resolve(); }
                 }
                 typeChar();
             });
         }
 
-        async function startBootSequence() {
-            for (let line of bootSequence) {
-                if (abortBoot) break; await typeLine(line, '', 15); await new Promise(r => setTimeout(r, 200)); 
-            }
-            if (!abortBoot) { inputLine.style.display = 'flex'; passcodeInput.focus(); }
+        function initSystem() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('terminal-container').style.display = 'flex';
+            
+            // Start BGM
+            bgm.volume = 0.4; // Keep music slightly lower than Voice
+            bgm.play().catch(e => console.log("No marvel.mp3 found, skipping audio."));
+            
+            startBootSequence();
         }
 
-        // --- COMMAND PARSER (Mark IV Upgrade) ---
-        passcodeInput.addEventListener('keypress', function() { playKeystroke(); });
+        async function startBootSequence() {
+            for (let line of bootSequence) {
+                await typeLine(line, '', 15); await new Promise(r => setTimeout(r, 400)); 
+            }
+            await typeLine("PLEASE STATE YOUR DIRECTIVE:", "voice-prompt", 30);
+            jarvisSpeak("Systems online. Awaiting vocal authorization. Please state your directive.");
+            
+            setTimeout(startVoiceRecognition, 3500); // Wait for JARVIS to finish speaking
+        }
 
-        passcodeInput.addEventListener('keydown', async function(e) {
-            if (e.key === 'Enter') {
-                const command = passcodeInput.value.trim().toUpperCase();
-                passcodeInput.value = ''; passcodeInput.disabled = true; inputLine.style.display = 'none';
-                
-                if (command !== "") {
-                    await typeLine(`C:\\MAINFRAME> ${command}`, 'user-input', 10);
-                }
+        // --- VOICE RECOGNITION (Web Speech API) ---
+        function startVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                typeLine("ERROR: VOCAL SENSORS UNAVAILABLE IN THIS BROWSER.", "denied");
+                return;
+            }
 
-                switch(command) {
-                    case 'HELP':
-                        await typeLine("AVAILABLE DIRECTIVES:");
-                        await typeLine(" - STATUS : Display system vitals");
-                        await typeLine(" - CLEAR  : Purge terminal display");
-                        await typeLine(" - [ENCRYPTED]: Requires authorization code");
-                        break;
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+
+            recognition.onstart = function() { micStatus.style.display = 'block'; scrollToBottom(); };
+            
+            recognition.onspeechend = function() { micStatus.style.display = 'none'; recognition.stop(); };
+
+            recognition.onresult = async function(event) {
+                const transcript = event.results[0][0].transcript.toLowerCase();
+                await typeLine(`> AUDIO CAPTURED: "${transcript}"`, 'user-voice');
+
+                // Check if they said the secret phrase (Flexible matching)
+                if (transcript.includes("jarvis") && transcript.includes("decrypt") || transcript.includes("jarvis decrypt payload")) {
+                    playSuccess();
+                    jarvisSpeak("Voiceprint verified. Calibrating orbital telemetry. Welcome back, Yugant.");
+                    await typeLine("VOCAL MATCH: 100%. INITIATING DECRYPTION MATRIX...", "granted", 30);
                     
-                    case 'STATUS':
-                        await typeLine("DIAGNOSTIC IN PROGRESS...");
-                        await typeLine("ASTROPHYSICS ENGINE: NOMINAL", "granted");
-                        await typeLine("NEURAL CHIP LINK: 99.8% SYNCED", "granted");
-                        await typeLine("UNRESOLVED ANOMALIES: 0");
-                        break;
-
-                    case 'CLEAR':
-                        outputDiv.innerHTML = '';
-                        break;
-
-                    case CORRECT_PASSWORD:
-                        playSuccess();
-                        jarvisSpeak("Authorization verified. Calibrating orbital telemetry. Welcome back, Yugant.");
-                        await typeLine("ACCESS GRANTED. INITIATING DECRYPTION MATRIX...", "granted", 30);
-                        arcReactor.style.display = 'block'; scrollToBottom();
-                        
-                        setTimeout(() => {
-                            arcReactor.style.display = 'none'; secretMessageDiv.style.display = 'block'; scrollToBottom();
-                        }, 3500);
-                        return; // Stop here, don't re-enable normal input
-
-                    case '':
-                        break; // Do nothing on empty enter
-
-                    default:
-                        playError();
-                        await typeLine(`COMMAND NOT RECOGNIZED: '${command}'`, 'denied');
-                        break;
+                    arcReactor.style.display = 'block'; scrollToBottom();
+                    setTimeout(() => {
+                        arcReactor.style.display = 'none'; secretMessageDiv.style.display = 'block'; scrollToBottom();
+                    }, 4000);
+                } else {
+                    playError();
+                    jarvisSpeak("Voiceprint mismatch. Access denied.");
+                    await typeLine("ACCESS DENIED. PLEASE RE-STATE DIRECTIVE.", "denied", 20);
+                    setTimeout(startVoiceRecognition, 3000); // Restart mic after failure
                 }
-                
-                inputLine.style.display = 'flex'; passcodeInput.disabled = false; passcodeInput.focus(); scrollToBottom();
-            }
-        });
+            };
 
-        // --- EMERGENCY PROTOCOL (Ctrl + Shift + E) ---
-        window.addEventListener('keydown', async function(e) {
-            if (e.ctrlKey && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
-                e.preventDefault(); if (emergencyMode) return;
-                
-                emergencyMode = true; abortBoot = true; document.body.classList.add('emergency-mode');
-                inputLine.style.display = 'none'; arcReactor.style.display = 'none'; secretMessageDiv.style.display = 'none';
-                outputDiv.innerHTML = ''; triggerAlarm(); window.speechSynthesis.cancel();
-                jarvisSpeak("Critical alert. Directive Omega recognized. Initiating system purge.", true);
-                
-                for (let line of emergencySequence) { await typeLine(line, 'critical', 10); await new Promise(r => setTimeout(r, 200)); }
-            }
-        });
+            recognition.onerror = function(event) {
+                micStatus.style.display = 'none';
+                if(event.error === 'not-allowed') {
+                    typeLine("ERROR: MICROPHONE ACCESS BLOCKED.", "denied");
+                } else {
+                    typeLine("AUDIO SENSOR MALFUNCTION. RETRYING...", "denied");
+                    setTimeout(startVoiceRecognition, 2000);
+                }
+            };
 
-        window.onload = startBootSequence;
+            recognition.start();
+        }
     </script>
 </body>
 </html>
