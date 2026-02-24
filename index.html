@@ -240,16 +240,37 @@
             else if (command.includes("pause music")) { bgm.pause(); await typeLine("AUDIO: PLAYBACK PAUSED", "system-msg"); }
             else if (command.includes("play music")) { bgm.play(); await typeLine("AUDIO: PLAYBACK RESUMED", "system-msg"); }
 
-            // COMMAND: DECRYPT (The Password)
-            else if (command.includes("jarvis decrypt payload") || command === "jarvis") {
-                playSuccess(); recognitionMode = false; micStatus.style.display = 'none'; inputLine.style.display = 'none';
+          // COMMAND: DECRYPT (The Password)
+            if (command.includes("jarvis decrypt payload") || command === "jarvis") {
+                playSuccess(); 
+                
+                // Temporarily hide inputs while decrypting
+                micStatus.style.display = 'none'; 
+                inputLine.style.display = 'none';
+                
                 jarvisSpeak("Command accepted. Calibrating orbital telemetry. Welcome back.");
                 await typeLine("ACCESS GRANTED. INITIATING DECRYPTION MATRIX...", "granted", 30);
+                
                 arcReactor.style.display = 'block'; scrollToBottom();
-                setTimeout(() => { arcReactor.style.display = 'none'; secretMessageDiv.style.display = 'block'; scrollToBottom(); }, 4000);
+                
+                setTimeout(() => { 
+                    arcReactor.style.display = 'none'; 
+                    secretMessageDiv.style.display = 'block'; 
+                    scrollToBottom(); 
+                    
+                    // --- THE FIX: BRING THE CONTROLS BACK ONLINE ---
+                    if (isVoice) {
+                        setTimeout(startVoiceRecognition, 1000); // Restart mic
+                    } else {
+                        inputLine.style.display = 'flex'; // Bring back keyboard
+                        passcodeInput.disabled = false;
+                        passcodeInput.focus();
+                    }
+                }, 4000);
+                
                 return;
             }
-
+                
             // COMMAND: CLEAR
             else if (command === "clear") { outputDiv.innerHTML = ''; }
 
